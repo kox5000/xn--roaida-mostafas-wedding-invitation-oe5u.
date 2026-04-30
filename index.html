@@ -195,8 +195,8 @@ body.intro-active .page{opacity:0;pointer-events:none;}
   </div>
 </div>
 <div id="intro-video-container">
-  <video id="intro-video" playsinline preload="auto">
-    <source src="video.mp4" type="video/mp4" />
+  <video id="intro-video" playsinline muted preload="auto">
+    <source src="video8.mp4" type="video/mp4" />
     Your browser does not support the video tag.
   </video>
 </div>
@@ -536,6 +536,7 @@ body.intro-active .page{opacity:0;pointer-events:none;}
 </div><!-- .page -->
 
 <script>
+  console.log('v1.0.0');
 // COUNTDOWN
 function pad(n){return String(n).padStart(2,'0');}
 function tick(){
@@ -549,8 +550,18 @@ function tick(){
 tick();setInterval(tick,1000);
 
 // SCROLL REVEAL
-const obs=new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('visible');});},{threshold:0.1});
-document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
+if ('IntersectionObserver' in window) {
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) e.target.classList.add('visible');
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+} else {
+  document.querySelectorAll('.reveal').forEach(el => el.classList.add('visible'));
+}
+// document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
 
 // MUSIC
 const bgAudio=document.getElementById('bg-audio');
@@ -573,17 +584,31 @@ function toggleMusic(){
 const introOverlay=document.getElementById('intro-overlay');
 const introVideoContainer=document.getElementById('intro-video-container');
 const introVideo=document.getElementById('intro-video');
+introVideo.muted = true;
 
 function startIntro(){
   introOverlay.classList.add('hidden');
   introVideoContainer.style.display='block';
-  introVideo.play().catch(err=>console.warn('Video play failed:',err));
-  if(!playing){
-    bgAudio.play().then(()=>{playing=true;updateMusicButton();}).catch(err=>console.warn('Audio play failed:',err));
-  }
-}
-introOverlay.addEventListener('click', startIntro);
 
+  introVideo.play().catch(err => {
+    console.warn('Video play failed:', err);
+  });
+
+ 
+}
+
+introOverlay.addEventListener('click', () => {
+  startIntro();
+
+  if(!playing){
+    bgAudio.play()
+      .then(() => {
+        playing = true;
+        updateMusicButton();
+      })
+      .catch(err => console.warn('Audio play failed:', err));
+  }
+});
 introVideo.addEventListener('ended', function(){
   introVideoContainer.classList.add('fade-out');
   document.body.classList.remove('intro-active');
@@ -594,6 +619,11 @@ introVideo.addEventListener('ended', function(){
     introVideoContainer.removeEventListener('transitionend', transitionDone);
   });
 });
+
+setTimeout(() => {
+  document.body.classList.remove('intro-active');
+  introVideoContainer.style.display = 'none';
+}, 5000);
 </script>
 </body>
 </html>
